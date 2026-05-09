@@ -1,0 +1,115 @@
+{
+  "tool": {
+    "schemaVersion": "xrmcp.v0.1.0",
+    "name": "get_jira_ticket",
+    "displayName": "Get Jira Ticket",
+    "description": "Fetch a Jira issue by its key and return its summary, status and description.",
+    "type": "api",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "issueKey": {
+          "type": "string",
+          "description": "Jira issue key, e.g. PROJ-123"
+        }
+      },
+      "required": [
+        "issueKey"
+      ]
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "array",
+            "object",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "summary",
+        "status"
+      ]
+    },
+    "configSchema": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "type": "string",
+          "description": "Atlassian subdomain, e.g. mycompany (resolves to mycompany.atlassian.net)"
+        }
+      },
+      "required": [
+        "domain"
+      ]
+    },
+    "executions": [
+      {
+        "id": "get_ticket_exe",
+        "name": "Get ticket",
+        "description": "",
+        "order": 1,
+        "type": "api",
+        "request": {
+          "method": "GET",
+          "url": "https://{{config.domain}}.atlassian.net/rest/api/3/issue/{{input.issueKey}}?fields=summary,status,description,reporter,assignee",
+          "auth": {
+            "type": "basic",
+            "basic": [
+              {
+                "key": "username",
+                "value": "{{secrets.JIRA_USERNAME}}",
+                "type": "string"
+              },
+              {
+                "key": "password",
+                "value": "{{secrets.JIRA_API_TOKEN}}",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "processor": {
+          "mapper": {
+            "mode": "jsonpath",
+            "allow_missing": true,
+            "mapping": {
+              "key": "$.key",
+              "summary": "$.fields.summary",
+              "status": "$.fields.status.name",
+              "description": "$.fields.description.content[*].content[*].text",
+              "reporter": "$.fields.reporter.displayName",
+              "assignee": "$.fields.assignee.displayName",
+              "reporter_email": "$.fields.reporter.emailAddress"
+            }
+          }
+        }
+      }
+    ],
+    "permissions": {
+      "secrets": [
+        "JIRA_API_TOKEN",
+        "JIRA_USERNAME"
+      ],
+      "network": [
+        "*.atlassian.net"
+      ],
+      "risk": "read_only"
+    }
+  },
+  "config": {
+    "domain": "my-company"
+  }
+}

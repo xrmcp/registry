@@ -1,0 +1,179 @@
+{
+    "tool": {
+        "schemaVersion": "xrmcp.v0.1.0",
+        "name": "get_jira_ticket_history",
+        "displayName": "Get Jira Ticket History",
+        "description": "Fetch the change history of a Jira issue. Each entry describes what fields changed, who made the change and when.",
+        "type": "api",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "issueKey": {
+                    "type": "string",
+                    "description": "Jira issue key, e.g. PROJ-123"
+                },
+                "topN": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "description": "Maximum number of changelog entries to fetch"
+                }
+            },
+            "required": [
+                "issueKey",
+                "topN"
+            ]
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "startAt": {
+                    "type": "integer"
+                },
+                "maxResults": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "isLast": {
+                    "type": "boolean"
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "created": {
+                                "type": "string"
+                            },
+                            "author": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "accountId": {
+                                        "type": "string"
+                                    },
+                                    "displayName": {
+                                        "type": "string"
+                                    }
+                                },
+                                "additionalProperties": true
+                            },
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "field": {
+                                            "type": "string"
+                                        },
+                                        "fieldId": {
+                                            "type": "string"
+                                        },
+                                        "fromString": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "toString": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "created"
+                        ],
+                        "additionalProperties": true
+                    }
+                }
+            },
+            "required": [
+                "startAt",
+                "maxResults",
+                "total",
+                "values"
+            ],
+            "additionalProperties": true
+        },
+        "configSchema": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string",
+                    "description": "Atlassian subdomain, e.g. mycompany (resolves to mycompany.atlassian.net)"
+                }
+            },
+            "required": [
+                "domain"
+            ]
+        },
+        "permissions": {
+            "network": [
+                "*.atlassian.net"
+            ],
+            "secrets": [
+                "JIRA_API_TOKEN",
+                "JIRA_USERNAME"
+            ],
+            "risk": "read_only"
+        },
+        "executions": [
+            {
+                "id": "get_history_exe",
+                "order": 1,
+                "type": "api",
+                "request": {
+                    "method": "GET",
+                    "url": "https://{{config.domain}}.atlassian.net/rest/api/3/issue/{{input.issueKey}}/changelog?maxResults={{input.topN}}",
+                    "auth": {
+                        "type": "basic",
+                        "basic": [
+                            {
+                                "key": "username",
+                                "value": "{{secrets.JIRA_USERNAME}}",
+                                "type": "string"
+                            },
+                            {
+                                "key": "password",
+                                "value": "{{secrets.JIRA_API_TOKEN}}",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "header": [
+                        { "key": "Accept", "value": "application/json" }
+                    ]
+                },
+                "processor": {
+                    "mapper": {
+                        "mode": "jsonpath",
+                        "mapping": {
+                            "startAt": "$.startAt",
+                            "maxResults": "$.maxResults",
+                            "total": "$.total",
+                            "isLast": "$.isLast",
+                            "values": "$.values"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "config": {
+        "domain": "my-company"
+    }
+}

@@ -1,0 +1,61 @@
+{
+  "version": "1",
+  "tools": [
+    {
+      "name": "get_jira_ticket",
+      "displayName": "Get Jira Ticket",
+      "description": "Fetch a Jira issue by its key and return its summary, status and description.",
+      "category": "jira",
+      "tags": ["jira", "atlassian", "issue", "ticket"],
+      "path": "jira/get_jira_ticket.xrmcp.json"
+    },
+    {
+      "name": "comment_jira_ticket",
+      "displayName": "Add Jira Comment",
+      "description": "Add a plain text comment to a Jira issue.",
+      "category": "jira",
+      "tags": ["jira", "atlassian", "comment", "ticket"],
+      "path": "jira/comment_jira_ticket.xrmcp.json"
+    },
+    {
+      "name": "get_jira_ticket_comment",
+      "displayName": "Get Jira Comments",
+      "description": "Fetch the most recent comments for a Jira issue.",
+      "category": "jira",
+      "tags": ["jira", "atlassian", "comment", "ticket"],
+      "path": "jira/get_jira_ticket_comment.xrmcp.json"
+    },
+    {
+      "name": "get_jira_ticket_history",
+      "displayName": "Get Jira Ticket History",
+      "description": "Fetch the change history of a Jira issue.",
+      "category": "jira",
+      "tags": ["jira", "atlassian", "history", "changelog", "ticket"],
+      "path": "jira/get_jira_ticket_history.xrmcp.json"
+    },
+    {
+      "name": "list_project",
+      "displayName": "List GitLab Group Projects",
+      "description": "List projects in a GitLab group given its group path.",
+      "category": "gitlab",
+      "tags": ["gitlab", "scm", "projects", "git"],
+      "path": "gitlab/list_project.xrmcp.json"
+    },
+    {
+      "name": "get_post",
+      "displayName": "Get JSONPlaceholder Post",
+      "description": "Fetch a post from JSONPlaceholder by post id.",
+      "category": "jsonplaceholder",
+      "tags": ["jsonplaceholder", "demo", "post", "rest"],
+      "path": "jsonph/get_post.xrmcp.json"
+    },
+    {
+      "name": "list_posts",
+      "displayName": "List JSONPlaceholder Posts",
+      "description": "List posts from JSONPlaceholder.",
+      "category": "jsonplaceholder",
+      "tags": ["jsonplaceholder", "demo", "posts", "rest"],
+      "path": "jsonph/list_posts.xrmcp.json"
+    }
+  ]
+}

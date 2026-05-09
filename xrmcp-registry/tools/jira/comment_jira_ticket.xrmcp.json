@@ -1,0 +1,114 @@
+{
+    "tool": {
+        "schemaVersion": "xrmcp.v0.1.0",
+        "name": "comment_jira_ticket",
+        "displayName": "Add Jira Comment",
+        "description": "Add a plain text comment to a Jira issue.",
+        "type": "api",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "issueKey": {
+                    "type": "string",
+                    "description": "Jira issue key, e.g. PROJ-123"
+                },
+                "comment": {
+                    "type": "string",
+                    "description": "Plain text content of the comment to post"
+                }
+            },
+            "required": [
+                "issueKey",
+                "comment"
+            ]
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "created": {
+                    "type": "string"
+                },
+                "updated": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "created"
+            ],
+            "additionalProperties": true
+        },
+        "configSchema": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string",
+                    "description": "Atlassian subdomain, e.g. mycompany (resolves to mycompany.atlassian.net)"
+                }
+            },
+            "required": [
+                "domain"
+            ]
+        },
+        "permissions": {
+            "network": [
+                "*.atlassian.net"
+            ],
+            "secrets": [
+                "JIRA_API_TOKEN",
+                "JIRA_USERNAME"
+            ],
+            "risk": "write"
+        },
+        "executions": [
+            {
+                "id": "add_comment_exe",
+                "order": 1,
+                "type": "api",
+                "request": {
+                    "method": "POST",
+                    "url": "https://{{config.domain}}.atlassian.net/rest/api/3/issue/{{input.issueKey}}/comment",
+                    "auth": {
+                        "type": "basic",
+                        "basic": [
+                            {
+                                "key": "username",
+                                "value": "{{secrets.JIRA_USERNAME}}",
+                                "type": "string"
+                            },
+                            {
+                                "key": "password",
+                                "value": "{{secrets.JIRA_API_TOKEN}}",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "header": [
+                        { "key": "Accept", "value": "application/json" },
+                        { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\"body\":{\"type\":\"doc\",\"version\":1,\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"{{input.comment}}\"}]}]}}"
+                    }
+                },
+                "processor": {
+                    "mapper": {
+                        "mode": "jsonpath",
+                        "mapping": {
+                            "id": "$.id",
+                            "created": "$.created",
+                            "updated": "$.updated"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "config": {
+        "domain": "my-company"
+    }
+}

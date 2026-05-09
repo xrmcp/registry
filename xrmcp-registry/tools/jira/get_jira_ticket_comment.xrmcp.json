@@ -1,0 +1,156 @@
+{
+    "tool": {
+        "schemaVersion": "xrmcp.v0.1.0",
+        "name": "get_jira_ticket_comment",
+        "displayName": "Get Jira Comments",
+        "description": "Fetch the most recent comments for a Jira issue. Use topN to limit the number of results.",
+        "type": "api",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "issueKey": {
+                    "type": "string",
+                    "description": "Jira issue key, e.g. PROJ-123"
+                },
+                "topN": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "description": "Maximum number of comments to fetch"
+                }
+            },
+            "required": [
+                "issueKey",
+                "topN"
+            ]
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "startAt": {
+                    "type": "integer"
+                },
+                "maxResults": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "comments": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "body": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ]
+                            },
+                            "created": {
+                                "type": "string"
+                            },
+                            "updated": {
+                                "type": "string"
+                            },
+                            "author": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "displayName": {
+                                        "type": "string"
+                                    },
+                                    "accountId": {
+                                        "type": "string"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        },
+                        "required": [
+                            "id"
+                        ],
+                        "additionalProperties": true
+                    }
+                }
+            },
+            "required": [
+                "startAt",
+                "maxResults",
+                "total",
+                "comments"
+            ],
+            "additionalProperties": false
+        },
+        "configSchema": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string",
+                    "description": "Atlassian subdomain, e.g. mycompany (resolves to mycompany.atlassian.net)"
+                }
+            },
+            "required": [
+                "domain"
+            ]
+        },
+        "permissions": {
+            "network": [
+                "*.atlassian.net"
+            ],
+            "secrets": [
+                "JIRA_API_TOKEN",
+                "JIRA_USERNAME"
+            ],
+            "risk": "read_only"
+        },
+        "executions": [
+            {
+                "id": "get_comments_exe",
+                "order": 1,
+                "type": "api",
+                "request": {
+                    "method": "GET",
+                    "url": "https://{{config.domain}}.atlassian.net/rest/api/3/issue/{{input.issueKey}}/comment?maxResults={{input.topN}}",
+                    "auth": {
+                        "type": "basic",
+                        "basic": [
+                            {
+                                "key": "username",
+                                "value": "{{secrets.JIRA_USERNAME}}",
+                                "type": "string"
+                            },
+                            {
+                                "key": "password",
+                                "value": "{{secrets.JIRA_API_TOKEN}}",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "header": [
+                        { "key": "Accept", "value": "application/json" }
+                    ]
+                },
+                "processor": {
+                    "mapper": {
+                        "mode": "jsonpath",
+                        "mapping": {
+                            "startAt": "$.startAt",
+                            "maxResults": "$.maxResults",
+                            "total": "$.total",
+                            "comments": "$.comments"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "config": {
+        "domain": "my-company"
+    }
+}

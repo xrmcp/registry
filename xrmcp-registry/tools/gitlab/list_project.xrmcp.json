@@ -1,0 +1,125 @@
+{
+    "tool": {
+        "schemaVersion": "xrmcp.v0.1.0",
+        "name": "list_project",
+        "displayName": "List GitLab Group Projects",
+        "description": "List projects in a GitLab group given its group path. For nested groups, pass the URL-encoded full path such as platform%2Fbackend.",
+        "type": "api",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "groupPath": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "GitLab group path or URL-encoded full nested group path, for example my-group or platform%2Fbackend."
+                }
+            },
+            "required": [
+                "groupPath"
+            ],
+            "additionalProperties": false
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "path": {
+                                "type": "string"
+                            },
+                            "path_with_namespace": {
+                                "type": "string"
+                            },
+                            "web_url": {
+                                "type": "string"
+                            },
+                            "description": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "default_branch": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "web_url"
+                        ],
+                        "additionalProperties": true
+                    }
+                }
+            }
+        },
+        "configSchema": {
+            "type": "object",
+            "properties": {
+                "host": {
+                    "type": "string",
+                    "description": "GitLab host, for example gitlab.com or gitlab.example.com."
+                }
+            },
+            "required": [
+                "host"
+            ],
+            "additionalProperties": false
+        },
+        "permissions": {
+            "network": [
+                "*.gitlab.com"
+            ],
+            "secrets": [
+                "GITLAB_TOKEN"
+            ],
+            "risk": "read_only"
+        },
+        "executions": [
+            {
+                "id": "list_projects_exe",
+                "order": 1,
+                "type": "api",
+                "request": {
+                    "method": "GET",
+                    "url": "https://{{config.host}}/api/v4/groups/{{input.groupPath}}/projects?include_subgroups=true&per_page=100",
+                    "header": [
+                        { "key": "PRIVATE-TOKEN", "value": "{{secrets.GITLAB_TOKEN}}" },
+                        { "key": "Accept", "value": "application/json" }
+                    ]
+                },
+                "processor": {
+                    "filter": {
+                        "mode": "select",
+                        "fields": [
+                            "result[].name",
+                            "result[].web_url",
+                            "result[].default_branch",
+                            "result[].namespace.full_path"
+                        ]
+                    },
+                    "mapper": {
+                        "mode": "jsonpath",
+                        "mapping": {
+                            "projects": "$.result"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "config": {
+        "host": "gitlab.com"
+    }
+}
